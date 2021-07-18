@@ -1,10 +1,9 @@
 import pygame
-import random
 import sys
+import random
 from pygame.locals import *
+from pygame.math import Vector2
 
-
-WIDTH, HEIGHT = 450, 450
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -12,106 +11,123 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 SKY_BLUE = (45, 163, 215)
 
-snake_size = 10
-snake_pos = [WIDTH / 2, HEIGHT / 2]  # spawning position
-snake_body = [
-    snake_pos,
-    [snake_pos[0] - snake_size, snake_pos[1]],
-    [snake_pos[0] - 2 * snake_size, snake_pos[1]]
-]
+cell_size = 10
+cell_number = 45
+WIDTH, HEIGHT = cell_number * cell_size, cell_number * cell_size
+snake_body = [Vector2(20, 20), Vector2(21, 20), Vector2(22, 20)]
 
-
-def game_over():
-    """Call this function when the play lose."""
-    pass
+up = Vector2(0, -1)
+down = Vector2(0, 1)
+left = Vector2(-1, 0)
+right = Vector2(1, 0)
 
 
 class Snake:
     """Enable the snake to move around on screen."""
 
-    def __init__(self, body: list, size: int, color: tuple, screen):
-        self.body = body
-        self.size = size
+    def __init__(self, screen):
         self.screen = screen
-        self.color = color
-        self.x, self.y = self.body[0]  # head position
-        self.direction = random.choice(['Right', 'Left', 'Up', 'Down'])
-        self.speed = 5  # difficulty of the game
+        self.body = snake_body
+        self.direction = left
         self.grow = 0
 
     def _draw(self):
         """Draw the snake on screen."""
-        self.body.insert(0, [self.x, self.y])
-        for pos in self.body:
-            pygame.draw.rect(self.screen, self.color, (pos[0], pos[1], self.size, self.size))
-
-        # pop the snake tail every frame
-        if self.grow:
-            self.grow = 0
-        else:
-            self.body.pop()
+        for block in self.body:
+            x_pos = int(block.x * cell_size)
+            y_pos = int(block.y * cell_size)
+            snake_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
+            pygame.draw.rect(self.screen, SKY_BLUE, snake_rect)
 
     def _move(self):
         """Move the snake in terms of the direction."""
-        if self.direction == 'Right':
-            self.x += self.speed
-        if self.direction == 'Left':
-            self.x -= self.speed
-        if self.direction == 'Up':
-            self.y -= self.speed
-        if self.direction == 'Down':
-            self.y += self.speed
+        if not self.grow:
+            body_copy = self.body[:-1]  # body excluding the tail
+            body_copy.insert(0, body_copy[0] + self.direction)
+            self.body = body_copy
+        else:
+            self.body.insert(0, self.body[0] + self.direction)
+            self.grow = 0
 
     def _collision(self):
         """Collision detection."""
         # whether it collides with the edge of the window
-        if self.x + self.size >= WIDTH or self.x <= 0 or self.y + self.size >= HEIGHT or self.y <= 0:
+        head_pos = self.body[0]
+        if head_pos.x * cell_size > WIDTH or head_pos.x < 0 or head_pos.y * cell_size > HEIGHT or head_pos.y < 0:
             print('Crash into the wall!')
-            # game_over()
             sys.exit()
 
         # whether it collides with itself
-        for body in self.body[1:]:
-            if self.x == body[0] and self.y == body[1]:
+        for block in self.body[1:]:
+            if head_pos.x == block.x and head_pos.y == block.y:
                 print('Eat yourself!')
-                game_over()
                 sys.exit()
 
     def update(self):
         """Update the snake object."""
         self._collision()
-        self._move()
         self._draw()
+        self._move()
 
 
 class Food:
     """Food makes the snake become longer when it is eaten."""
 
-    def __init__(self, size: int, color: tuple, screen):
-        self.size = size
-        self.color = color
+    def __init__(self, screen):
         self.screen = screen
         self.eaten = 0
-        self.x = random.randrange(WIDTH - self.size)
-        self.y = random.randrange(HEIGHT - self.size)
+        self.x, self.y = self._randomise()
+
+    def _randomise(self):
+        """Spawn the food in randomly on screen."""
+        self.x = random.randrange(cell_number - 1)
+        self.y = random.randrange(cell_number - 1)
+
+        return self.x, self.y
 
     def _spawn(self):
-        """Spawn the food in randomly on screen."""
         if not self.eaten:
-            pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.size, self.size))
+            pos_x = int(self.x * cell_size)
+            pos_y = int(self.y * cell_size)
+            food_rect = pygame.Rect(pos_x, pos_y, cell_size, cell_size)
+            pygame.draw.rect(self.screen, RED, food_rect)
         else:
-            self.x = random.randrange(WIDTH - self.size)
-            self.y = random.randrange(HEIGHT - self.size)
+            self.x, self.y = self._randomise()
 
-    def _eaten(self, pos: tuple):
-        """Change the state to 1 if the food is eaten."""
-        self.eaten = 0
-        if abs(self.x - pos[0]) <= self.size and abs(self.y - pos[1]) < self.size:
-            self.eaten = 1
-
-    def update(self, pos):
+    def update(self):
         self._spawn()
-        self._eaten(pos)
+
+
+class Main:
+    """Main control of the game."""
+
+    def __init__(self, screen):
+        self.screen = screen
+        self.snake = Snake(self.screen)
+        self.food = Food(self.screen)
+        self.score = 0
+
+    def scores(self):
+        if self.snake_grow():
+            self.score += 10
+            print(self.score)
+
+    def snake_grow(self):
+        if self.food.eaten:
+            self.snake.grow = 1
+            return 1  # for scores()
+
+    def food_eaten(self):
+        self.food.eaten = 0
+        if self.snake.body[0].x == self.food.x and self.snake.body[0].y == self.food.y:
+            self.food.eaten = 1
+
+    def update(self):
+        self.snake_grow()
+        self.food_eaten()
+        self.scores()
+        self.snake.update()
+        self.food.update()
 
 
 def main():
@@ -119,41 +135,32 @@ def main():
     pygame.init()
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Snake!")
-    # surface = pygame.Surface(screen.get_size())
-    # surface = surface.convert()
-
-    # prepare for game objects
-    snake = Snake(snake_body, snake_size, SKY_BLUE, screen)
-    food = Food(8, RED, screen)
+    pygame.display.set_caption("Snake Game")
+    main_game = Main(screen)
 
     # main loop
     over = 0
     while not over:
-        clock.tick(30)
+        clock.tick(10)
 
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key in [K_q, K_ESCAPE]):
                 over = 1
 
             # snake's movement
-            if (event.type == KEYDOWN and event.key in [K_DOWN, K_s]) and snake.direction != 'Up':
-                snake.direction = 'Down'
-            elif (event.type == KEYDOWN and event.key in [K_UP, K_w]) and snake.direction != 'Down':
-                snake.direction = 'Up'
-            elif (event.type == KEYDOWN and event.key in [K_LEFT, K_a]) and snake.direction != 'Right':
-                snake.direction = 'Left'
-            elif (event.type == KEYDOWN and event.key in [K_RIGHT, K_d]) and snake.direction != 'Left':
-                snake.direction = 'Right'
-
-        # expand the snake if the food is eaten
-        if food.eaten:
-            snake.grow = 1
+            if event.type == KEYDOWN:
+                if event.key in [K_DOWN, K_s] and main_game.snake.direction != up:
+                    main_game.snake.direction = down
+                if event.key in [K_UP, K_w] and main_game.snake.direction != down:
+                    main_game.snake.direction = up
+                if event.key in [K_LEFT, K_a] and main_game.snake.direction != right:
+                    main_game.snake.direction = left
+                if event.key in [K_RIGHT, K_d] and main_game.snake.direction != left:
+                    main_game.snake.direction = right
 
         # draw the whole screen
         screen.fill(BLACK)
-        snake.update()
-        food.update((snake.x, snake.y))
+        main_game.update()
         pygame.display.update()
 
 
