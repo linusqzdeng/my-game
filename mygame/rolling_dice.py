@@ -12,8 +12,8 @@ class Input:
 
     @staticmethod
     def hm_dice_and_side():
-        dice_number = int(input("Enter the number of dice:"))
-        hm_side = int(input("Enter the number of side for each dice:"))
+        dice_number = int(input("Enter the number of dice: "))
+        hm_side = int(input("Enter the number of side for each dice: "))
 
         return [dice_number, hm_side]
 

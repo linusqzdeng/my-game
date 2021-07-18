@@ -73,6 +73,7 @@ class Chimp(pygame.sprite.Sprite):
     Move a monkey across the screen, spin it for a while
     when it is punched.
     """
+    count_punch = 0
 
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -87,6 +88,9 @@ class Chimp(pygame.sprite.Sprite):
         """Walk or spin, depending on the state of the monkey."""
         if self.dizzy:
             self._spin()
+            # shrink the monkey when it has been punched every 5 times
+            if Chimp.count_punch % 5 == 0:
+                self.image = pygame.transform.scale(self.image, (self.rect.width - 5, self.rect.height - 5))
         else:
             self._walk()
 
@@ -120,6 +124,7 @@ class Chimp(pygame.sprite.Sprite):
         if not self.dizzy:
             self.dizzy = 1
             self.original = self.image
+            Chimp.count_punch += 1
 
 
 def main():
