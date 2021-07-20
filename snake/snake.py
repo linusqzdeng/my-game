@@ -54,13 +54,13 @@ class Snake:
         # whether it collides with the edge of the window
         head_pos = self.body[0]
         if head_pos.x * cell_size > WIDTH or head_pos.x < 0 or head_pos.y * cell_size > HEIGHT or head_pos.y < 0:
-            print('Crash into the wall!')
+            print("Crash into the wall!")
             sys.exit()
 
         # whether it collides with itself
         for block in self.body[1:]:
             if head_pos.x == block.x and head_pos.y == block.y:
-                print('Eat yourself!')
+                print("Eat yourself!")
                 sys.exit()
 
     def update(self):
@@ -80,10 +80,10 @@ class Food:
 
     def _randomise(self):
         """Spawn the food in randomly on screen."""
-        self.x = random.randrange(cell_number - 1)
-        self.y = random.randrange(cell_number - 1)
+        x = random.randrange(cell_number - 1)
+        y = random.randrange(cell_number - 1)
 
-        return self.x, self.y
+        return x, y
 
     def _spawn(self):
         if not self.eaten:
@@ -106,6 +106,13 @@ class Main:
         self.snake = Snake(self.screen)
         self.food = Food(self.screen)
         self.score = 0
+        self.speed = 5  # difficulty
+
+    def harder(self):
+        """Increases the snake moving speed every 50 scores."""
+        if self.score != 0 and self.score % 50 == 0 and (self.score + 10) % 50 != 0:
+            # self.speed += 2
+            pass
 
     def scores(self):
         if self.snake_grow():
@@ -126,6 +133,7 @@ class Main:
         self.snake_grow()
         self.food_eaten()
         self.scores()
+        self.harder()
         self.snake.update()
         self.food.update()
 
@@ -141,7 +149,7 @@ def main():
     # main loop
     over = 0
     while not over:
-        clock.tick(10)
+        clock.tick(main_game.speed)
 
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key in [K_q, K_ESCAPE]):
