@@ -15,11 +15,14 @@ class Bird:
     """Flappy bird."""
 
     def __init__(self):
-        self.surf, self.rect = Game.load_image('bluebird-midflap.bmp', BLACK)
+        self.midflap_surf, self.rect = Game.load_image("bluebird-midflap.bmp", BLACK)
+        self.downflap_surf, _ = Game.load_image("bluebird-downflap.bmp", BLACK)
+        self.upflap_surf, _ = Game.load_image("bluebird-upflap.bmp", BLACK)
         self.rect.center = (100, 256)
         self.gravity = 0.15
         self.vel = 0
         self.fall = 1
+        self.index = 0
 
     def flap(self):
         if not self.fall:
@@ -32,12 +35,20 @@ class Bird:
             self.vel += self.gravity
             self.rect.centery += self.vel
 
+    def rotate(self, old_surf):
+        self.new_surf = pygame.transform.rotozoom(old_surf, (4 - self.vel) * 7, 1)
+        return self.new_surf
+
+    def animation(self):
+        bird_frames = [self.midflap_surf, self.downflap_surf, self.upflap_surf]
+        self.surf = bird_frames[self.index]
+
 
 class Pipe:
     """Obstacles that prevent the bird flying through."""
 
     def __init__(self):
-        self.surf, _ = Game.load_image('pipe-green.bmp', WHITE)
+        self.surf, _ = Game.load_image("pipe-green.bmp", WHITE)
         self.gap = 100
         self.height = [150, 200, 250, 300, 350]
         self.pipes = []
@@ -64,8 +75,8 @@ class Game:
 
     def __init__(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.background, _ = Game.load_image('background-day.bmp')  # don't need the rect for background
-        self.floor, _ = Game.load_image('base.bmp')  # don't need floor rect
+        self.background, _ = Game.load_image("background-day.bmp")  # don't need background rect
+        self.floor, _ = Game.load_image("base.bmp")  # don't need floor rect
         self.floor_pos = Vector2(0, 450)
 
         self.bird = Bird()
@@ -73,15 +84,17 @@ class Game:
 
     def init_game(self):
         pygame.init()
-        self.clock = pygame.time.Clock()
         pygame.display.set_caption("Flappy Bird")
+        self.clock = pygame.time.Clock()
         self.SPAWNPIPES = pygame.USEREVENT
-        pygame.time.set_timer(self.SPAWNPIPES, 2300)  # 2.3s
+        self.BIRDFLAP = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.SPAWNPIPES, 2800)  # draw pipes every 2.8s
+        pygame.time.set_timer(self.BIRDFLAP, 200)  # change bird surf every 0.2s
 
     @staticmethod
     def load_image(filename, colorkey=None):
         """Load the image and return (surface, rect)."""
-        fullname = os.path.join('data', filename)
+        fullname = os.path.join("data", filename)
         image = pygame.image.load(fullname).convert()
 
         # any pixel that is different from black would be transparent
@@ -128,6 +141,11 @@ class Game:
             if event.type == KEYDOWN:
                 if event.key == K_SPACE:
                     self.bird.fall = 0
+            # bird animation
+            if event.type == self.BIRDFLAP:
+                self.bird.index += 1
+                if self.bird.index > 2:
+                    self.bird.index = 0  # rotate the bird frames
             # spawn pipes
             if event.type == self.SPAWNPIPES:
                 self.pipe.pipes.extend(self.pipe.create())
@@ -162,7 +180,9 @@ class Game:
             # bird behaviours
             self.bird.move()
             self.bird.flap()
-            self.screen.blit(self.bird.surf, self.bird.rect)
+            self.bird.animation()
+            self.bird.rotate_bird = self.bird.rotate(self.bird.surf)
+            self.screen.blit(self.bird.rotate_bird, self.bird.rect)
 
             # collision detection
             if self.pipes_collide(self.pipe.pipes) or self.screen_collide():
