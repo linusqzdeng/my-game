@@ -58,11 +58,13 @@ class Pipe:
             pipe.centerx += -1
 
     def remove(self, pipes):
+        """Remove pipes outside the screen."""
         for pipe in pipes:
             if pipe.centerx < -30:
                 pipes.remove(pipe)
 
     def create(self):
+        """Create two pipes at once with predetermined gap."""
         random_height = random.choice(self.height)
         self.bottom_rect = self.surf.get_rect(topleft=(300, random_height))
         self.top_rect = self.surf.get_rect(bottomleft=(300, random_height - self.gap))
@@ -75,9 +77,12 @@ class Game:
 
     def __init__(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        # self.font = pygame.font.SysFont()
         self.background, _ = Game.load_image("background-day.bmp")  # don't need background rect
         self.floor, _ = Game.load_image("base.bmp")  # don't need floor rect
         self.floor_pos = Vector2(0, 450)
+        self.score = 0
+        self.is_score = 1
 
         self.bird = Bird()
         self.pipe = Pipe()
@@ -130,6 +135,19 @@ class Game:
         if self.bird.rect.top < -100 or self.bird.rect.bottom > 450:
             return 1
 
+    def count_score(self, pipes):
+        """Count how many pipes the bird has passed through."""
+        if pipes:
+            for pipe in pipes:
+                if 99 <= pipe.centerx < 100 and self.is_score:
+                    self.score += 1
+                    self.is_score = 0
+                else:
+                    self.is_score = 1
+
+    def game_over(self):
+        pass
+
     def deal_events(self):
         """Events detection."""
         for event in pygame.event.get():
@@ -149,7 +167,6 @@ class Game:
             # spawn pipes
             if event.type == self.SPAWNPIPES:
                 self.pipe.pipes.extend(self.pipe.create())
-                print(self.pipe.pipes)
 
     def start(self):
         # initialise the game
@@ -183,6 +200,10 @@ class Game:
             self.bird.animation()
             self.bird.rotate_bird = self.bird.rotate(self.bird.surf)
             self.screen.blit(self.bird.rotate_bird, self.bird.rect)
+
+            # calculate the score
+            self.count_score(self.pipe.pipes)
+            print(self.score)
 
             # collision detection
             if self.pipes_collide(self.pipe.pipes) or self.screen_collide():
