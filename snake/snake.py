@@ -106,23 +106,23 @@ class Main:
         self.snake = Snake(self.screen)
         self.food = Food(self.screen)
         self.score = 0
-        self.speed = 5  # difficulty
+        self.speed = 3
 
-    def harder(self):
-        """Increases the snake moving speed every 50 scores."""
-        if self.score != 0 and self.score % 50 == 0 and (self.score + 10) % 50 != 0:
-            # self.speed += 2
-            pass
-
-    def scores(self):
-        if self.snake_grow():
-            self.score += 10
-            print(self.score)
+    def snake_speed(self):
+        """Increases the snake moving speed in terms of the snake body length."""
+        if self.speed >= 20:
+            self.speed = 20  # max speed
+        else:
+            self.speed = len(self.snake.body)
 
     def snake_grow(self):
-        if self.food.eaten:
+        if self.food.eaten and not self.snake.grow:
             self.snake.grow = 1
-            return 1  # for scores()
+
+    def scores(self):
+        if self.food.eaten:
+            self.score += 10
+            print(self.score)
 
     def food_eaten(self):
         self.food.eaten = 0
@@ -130,12 +130,12 @@ class Main:
             self.food.eaten = 1
 
     def update(self):
-        self.snake_grow()
         self.food_eaten()
+        self.snake_grow()
         self.scores()
-        self.harder()
         self.snake.update()
         self.food.update()
+        self.snake_speed()
 
 
 def main():
