@@ -146,7 +146,7 @@ class Game:
                     self.is_score = 1
 
     def game_over(self):
-        pass
+        print(f"Game Over! Your score is: {self.score}")
 
     def deal_events(self):
         """Events detection."""
@@ -203,15 +203,16 @@ class Game:
 
             # calculate the score
             self.count_score(self.pipe.pipes)
-            print(self.score)
 
             # collision detection
             if self.pipes_collide(self.pipe.pipes) or self.screen_collide():
                 OVER = 1
-                pygame.quit()
-                sys.exit()
 
             pygame.display.update()
+
+        self.game_over()
+        pygame.quit()
+        sys.exit()
 
 
 if __name__ == "__main__":
