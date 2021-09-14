@@ -79,7 +79,7 @@ def all_same(items):
     return len(set(items)) == 1
 
 
-def is_won(board):
+def is_win(board):
     """Separately detect if players have won the game
     by row, column or diagonal
     """
@@ -117,12 +117,12 @@ def game_over(board, game_round):
         print("Game Start! Player 1 takes the first move!")
 
     if game_round > 1:
-        if is_won(board) == player1_symbol:
+        if is_win(board) == player1_symbol:
             print("Game over! Player 1 won!")
             winner = 1
             return True
 
-        elif is_won(board) == player2_symbol:
+        elif is_win(board) == player2_symbol:
             print("Game over! Player 2 won!")
             winner = 1
             return True
