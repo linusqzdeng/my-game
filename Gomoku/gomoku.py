@@ -24,7 +24,7 @@ class Board:
         self.end = CELL * 2 + CELL * (self.size - 1)
         self.panel = np.zeros((self.size, self.size))
 
-    def draw(self):
+    def draw(self, screen):
         """A 15 * 15 rectangle, with 15 lines and 14 cells."""
         # Grid
         for i in range(self.size):
@@ -87,7 +87,7 @@ class Stone:
                 board[self.grid_y][self.grid_x] = 2  # 2 stands for white stone
                 self.switch()
 
-    def draw(self, black, white):
+    def draw(self, screen, black, white):
         """Draw all of the stones within the list."""
         for stone in set(black):
             pygame.draw.circle(screen, Colour.BLACK, stone, CELL // 2)
@@ -156,13 +156,8 @@ class Player:
         if is_win and board[y][x] == 2:
             print('Congrat! White stone wins the game!')
 
-    def restart(self, board, black, white):
-        """Empty the game board and start over another round."""
-        board = np.zeros((15, 15))
-        black, white = [], []
 
-
-if __name__ == '__main__':
+def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption('Gomoku')
@@ -193,11 +188,22 @@ if __name__ == '__main__':
                 is_win = player.winner(board.panel, stone.grid_x, stone.grid_y)
                 player.message(is_win, board.panel, stone.grid_x, stone.grid_y)
 
+                pygame.time.wait(5)
+
             if is_win and (event.type == KEYDOWN and event.key == K_r):
-                player.restart(board.panel, stone.black, stone.white)
+                # Restart the game
+                print('Start over another round!')
+                board.panel = np.zeros((15, 15))
+                stone.black.clear()
+                stone.white.clear()
+                stone.player = 1
 
         # Game play
-        board.draw()
-        stone.draw(stone.black, stone.white)
+        board.draw(screen)
+        stone.draw(screen, stone.black, stone.white)
 
         pygame.display.update()
+
+
+if __name__ == '__main__':
+    main()
