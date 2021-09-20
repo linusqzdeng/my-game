@@ -14,6 +14,7 @@ CELL = 45
 class Colour:
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
+    RED = (255, 0, 0)
     BOARD = (255, 153, 51)
 
 
@@ -28,15 +29,21 @@ class Board:
         """A 15 * 15 rectangle, with 15 lines and 14 cells."""
         # Grid
         for i in range(self.size):
-            pygame.draw.line(screen, Colour.BLACK, (self.start, self.start + CELL * i), (self.end, self.start + CELL * i), 2)
-            pygame.draw.line(screen, Colour.BLACK, (self.start + CELL * i, self.start), (self.start + CELL * i, self.end), 2)
+            pygame.draw.line(
+                screen, Colour.BLACK, (self.start, self.start + CELL * i), (self.end, self.start + CELL * i), 2
+            )
+            pygame.draw.line(
+                screen, Colour.BLACK, (self.start + CELL * i, self.start), (self.start + CELL * i, self.end), 2
+            )
 
         # Dots
-        dots_pos = [(self.start + CELL * 3, self.start + CELL * 3),
-                    (self.start + CELL * 11, self.start + CELL * 3),
-                    (self.start + CELL * 3, self.start + CELL * 11),
-                    (self.start + CELL * 11, self.start + CELL * 11),
-                    (self.start + CELL * 7, self.start + CELL * 7)]
+        dots_pos = [
+            (self.start + CELL * 3, self.start + CELL * 3),
+            (self.start + CELL * 11, self.start + CELL * 3),
+            (self.start + CELL * 3, self.start + CELL * 11),
+            (self.start + CELL * 11, self.start + CELL * 11),
+            (self.start + CELL * 7, self.start + CELL * 7),
+        ]
         for dot in dots_pos:
             pygame.draw.circle(screen, Colour.BLACK, dot, 8)
 
@@ -102,6 +109,18 @@ class Stone:
         else:
             self.player = 1
 
+    def last_palced(self, player, screen):
+        """
+        Using a red dot in the center of stone to indicate
+        the previous stone placed.
+        """
+        if (len(self.black) + len(self.white)) >= 1:
+            if player == 1:
+                pygame.draw.circle(screen, Colour.RED, self.white[-1], 5)
+            
+            if player == 2:
+                pygame.draw.circle(screen, Colour.RED, self.black[-1], 5)
+
 
 class Player:
     def __init__(self):
@@ -151,16 +170,16 @@ class Player:
     def message(self, is_win, board, x, y):
         """Display message when winner comes out."""
         if is_win and board[y][x] == 1:
-            print('Congrat! Black stone wins the game!')
+            print("Congrat! Black stone wins the game!")
 
         if is_win and board[y][x] == 2:
-            print('Congrat! White stone wins the game!')
+            print("Congrat! White stone wins the game!")
 
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption('Gomoku')
+    pygame.display.set_caption("Gomoku")
     clock = pygame.time.Clock()
 
     # Initialise game objects
@@ -186,24 +205,26 @@ def main():
                 stone.grid_pos(board.start)
                 stone.place(board.panel, board.start, board.end, stone.x, stone.y)
                 is_win = player.winner(board.panel, stone.grid_x, stone.grid_y)
+            
+            if is_win:
                 player.message(is_win, board.panel, stone.grid_x, stone.grid_y)
-
-                pygame.time.wait(5)
+                is_win = False
 
             if is_win and (event.type == KEYDOWN and event.key == K_r):
                 # Restart the game
-                print('Start over another round!')
+                print("Start over another round!")
                 board.panel = np.zeros((15, 15))
                 stone.black.clear()
                 stone.white.clear()
                 stone.player = 1
 
-        # Game play
+        # Drawing objects
         board.draw(screen)
         stone.draw(screen, stone.black, stone.white)
+        stone.last_palced(stone.player, screen)
 
         pygame.display.update()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
