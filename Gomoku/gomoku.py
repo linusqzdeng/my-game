@@ -117,7 +117,7 @@ class Stone:
         if (len(self.black) + len(self.white)) >= 1:
             if player == 1:
                 pygame.draw.circle(screen, Colour.RED, self.white[-1], 5)
-            
+
             if player == 2:
                 pygame.draw.circle(screen, Colour.RED, self.black[-1], 5)
 
@@ -167,12 +167,12 @@ class Player:
 
         return False
 
-    def message(self, is_win, board, x, y):
+    def message(self, board, x, y):
         """Display message when winner comes out."""
-        if is_win and board[y][x] == 1:
+        if board[y][x] == 1:
             print("Congrat! Black stone wins the game!")
 
-        if is_win and board[y][x] == 2:
+        if board[y][x] == 2:
             print("Congrat! White stone wins the game!")
 
 
@@ -205,9 +205,9 @@ def main():
                 stone.grid_pos(board.start)
                 stone.place(board.panel, board.start, board.end, stone.x, stone.y)
                 is_win = player.winner(board.panel, stone.grid_x, stone.grid_y)
-            
+
             if is_win:
-                player.message(is_win, board.panel, stone.grid_x, stone.grid_y)
+                player.message(board.panel, stone.grid_x, stone.grid_y)
                 is_win = False
 
             if is_win and (event.type == KEYDOWN and event.key == K_r):
