@@ -1,10 +1,10 @@
 import pygame
 import os
 import sys
-from pygame import *
+from pygame.locals import *
 
-WIDTH = 630
-HEIGHT = 630
+WIDTH = 624
+HEIGHT = 624
 vec = pygame.math.Vector2
 
 
@@ -56,15 +56,15 @@ class Tank(pygame.sprite.Sprite):
             self.direction = self.DIRECTION['UP']
             self.vel = self.SPEED * self.direction
             self.pos += self.vel
-        if key[K_DOWN]:
+        elif key[K_DOWN]:
             self.direction = self.DIRECTION['DOWN']
             self.vel = self.SPEED * self.direction
             self.pos += self.vel
-        if key[K_LEFT]:
+        elif key[K_LEFT]:
             self.direction = self.DIRECTION['LEFT']
             self.vel = self.SPEED * self.direction
             self.pos += self.vel
-        if key[K_RIGHT]:
+        elif key[K_RIGHT]:
             self.direction = self.DIRECTION['RIGHT']
             self.vel = self.SPEED * self.direction
             self.pos += self.vel
@@ -101,9 +101,6 @@ class Tank(pygame.sprite.Sprite):
         pass
 
     def update(self):
-        global screen
-
-        screen.blit(self.surf, self.rect)
         self.move()
         self.turn(self.direction)
         self.boundary()
@@ -163,54 +160,3 @@ class Bullet(pygame.sprite.Sprite):
 
     def update(self):
         self.move()
-
-
-if __name__ == "__main__":
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption('Battle City')
-    clock = pygame.time.Clock()
-
-    # Customised event
-    RELOAD = pygame.USEREVENT
-    pygame.time.set_timer(RELOAD, 1000)  # max shooting frequency
-
-    # Initialisation
-    bullet_sprites = pygame.sprite.Group()
-    tank = Tank(player=2)
-
-    over = 0
-    while not over:
-        clock.tick(60)
-        screen.fill((0, 0, 0))
-
-        for event in pygame.event.get():
-            # Exit and quit the game
-            if event.type == QUIT or (event.type == KEYDOWN and event.key in [K_q, K_ESCAPE]):
-                over = 1
-                pygame.quit()
-                sys.exit()
-
-            # Shooting bullet
-            if event.type == KEYDOWN and event.key == K_SPACE:
-                tank.shoot = True
-                bullet = Bullet(tank.direction, tank.rect)
-                bullet_sprites.add(bullet)
-            if event.type == RELOAD:
-                # bullet.collided = False
-                pass
-
-        # Game play
-        tank.update()
-
-        for bullet in bullet_sprites:  # Draw bullets
-            bullet.update()
-            screen.blit(bullet.surf, bullet.rect)
-
-            # Remove bullets outside the screen
-            if bullet.pos.x < -15 or bullet.pos.x > WIDTH + 15 or \
-                    bullet.pos.y < -15 or bullet.pos.y > HEIGHT + 15:
-                bullet_sprites.remove(bullet)
-
-        # Update the screen
-        pygame.display.update()
