@@ -1,4 +1,5 @@
 import pygame
+import os
 
 
 L_GRID = 48
@@ -63,7 +64,7 @@ class Iron(pygame.sprite.Sprite):
     SMALL_IRON = pygame.image.load_basic('images/scene/iron.bmp')  # 24*24
     BIG_IRON = pygame.image.load_basic('images/scene/big_iron.bmp')  # 48*48
 
-    def __init__(self, size):
+    def __init__(self, size: str):
         super().__init__()
         if size == 'small'.lower():
             self.surf = self.SMALL_IRON
@@ -87,7 +88,10 @@ class Tree(pygame.sprite.Sprite):
     pass
 
 
-class Map:
+class Tile:
+    LEVELFILES = sorted(os.listdir(os.path.join(os.getcwd(), 'levels')))
+    LEVELFILES_PATH = [os.path.join(os.getcwd(), 'levels', file) for file in LEVELFILES]
+
     def __init__(self, stage):
         # Sprites groups
         # self.brick_sprites = pygame.sprite.Group()
@@ -97,82 +101,42 @@ class Map:
         # self.tree_sprites = pygame.sprite.Group()
 
         self.all_sprites = pygame.sprite.Group()
+        self.level_file = self.LEVELFILES_PATH[stage - 1]
+        self.load_stage_comps()
 
-        # Initialise the stage
-        if stage == 1:
-            self.stage_1()
-        if stage == 2:
-            self.stage_2()
+    def load_stage_comps(self):
+        with open(self.level_file, 'r') as file:
+            for j, line in enumerate(file.readlines()):  # j is the row number
+                line = line.strip('\n')
+                print(line)
 
-    def stage_1(self):
-        # Positions of bricks
-        # Small bricks
-        for i in [0, 1, 24, 25]:
-            for j in [14]:
-                self.brick = Brick(size='small')
-                self.brick.rect.x = S_GRID * i
-                self.brick.rect.y = S_GRID * j
-                self.all_sprites.add(self.brick)
-
-        for i in [11, 12, 13, 14]:
-            for j in [23]:
-                self.brick = Brick(size='small')
-                self.brick.rect.x = S_GRID * i
-                self.brick.rect.y = S_GRID * j
-                self.all_sprites.add(self.brick)
-
-        for i in [11, 14]:
-            for j in [24, 25]:
-                self.brick = Brick(size='small')
-                self.brick.rect.x = S_GRID * i
-                self.brick.rect.y = S_GRID * j
-                self.all_sprites.add(self.brick)
-
-        # Big bricks
-        for i in [1, 3, 9, 11]:
-            for j in set(range(1, 6)) | set(range(9, 12)):
-                self.brick = Brick(size='big')
-                self.brick.rect.x = L_GRID * i
-                self.brick.rect.y = L_GRID * j
-                self.all_sprites.add(self.brick)
-
-        for i in [5, 7]:
-            for j in [1, 2, 3, 4, 6, 8, 9, 10]:
-                self.brick = Brick(size='big')
-                self.brick.rect.x = L_GRID * i
-                self.brick.rect.y = L_GRID * j
-                self.all_sprites.add(self.brick)
-
-        for i in [2, 3, 9, 10]:
-            for j in [7]:
-                self.brick = Brick(size='big')
-                self.brick.rect.x = L_GRID * i
-                self.brick.rect.y = L_GRID * j
-                self.all_sprites.add(self.brick)
-
-        for i in [6]:
-            for j in [8.5]:
-                self.brick = Brick(size='big')
-                self.brick.rect.x = L_GRID * i
-                self.brick.rect.y = L_GRID * j
-                self.all_sprites.add(self.brick)
-
-        # Positions of iron
-        # Small iron
-        for i in [0, 1, 24, 25]:
-            for j in [15]:
-                self.iron = Iron(size='small')
-                self.iron.rect.x = S_GRID * i
-                self.iron.rect.y = S_GRID * j
-                self.all_sprites.add(self.iron)
-
-        # Big iron
-        for i in [6]:
-            for j in [3]:
-                self.iron = Iron(size='big')
-                self.iron.rect.x = L_GRID * i
-                self.iron.rect.y = L_GRID * j
-                self.all_sprites.add(self.iron)
-
-    def stage_2(self):
-        pass
+                # Ignore the comments symblised as "#"
+                if line.startswith('#'):
+                    continue
+                # Ignore the params for the time being
+                elif line.startswith('%'):
+                    continue
+                # Tiles components
+                else:
+                    j -= 13  # for ignoring the previous 13 lines
+                    for i, tile in enumerate(line.split(' ')):  # i is the col number
+                        if tile == 'S':
+                            continue
+                        elif tile == 'B':  # Brick
+                            self.brick = Brick(size='small')
+                            self.brick.rect.x = S_GRID * i
+                            self.brick.rect.y = S_GRID * j
+                            self.all_sprites.add(self.brick)
+                        elif tile == 'I':  # Iron
+                            self.iron = Iron(size='small')
+                            self.iron.rect.x = S_GRID * i
+                            self.iron.rect.y = S_GRID * j
+                            self.all_sprites.add(self.iron)
+                        elif tile == 'C':  # Ice
+                            pass
+                        elif tile == 'R':  # River
+                            pass
+                        elif tile == 'T':  # Tree
+                            pass
+                        else:
+                            pass

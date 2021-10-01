@@ -3,7 +3,7 @@ import sys
 import os
 
 from tank import Tank, Bullet
-from scene import Base, Map
+from scene import Base, Tile
 from pygame.locals import *
 
 
@@ -33,7 +33,7 @@ def main():
     tank_sprites.add(my_tank)
 
     # Map
-    game_map = Map(stage=1)
+    game_map = Tile(stage=1)
     # Base
     base = Base((WIDTH / 2 - 24, HEIGHT - 48))
 
