@@ -51,8 +51,8 @@ class Board:
 class Stone:
     def __init__(self):
         self.r = CELL // 2  # radius
-        self.black = []
-        self.white = []
+        self.black, self.white = [], []
+        self.grid_x, self.grid_y = 0, 0
         self.player = 1
 
     def window_pos(self):
@@ -122,7 +122,7 @@ class Stone:
                 pygame.draw.circle(screen, Colour.RED, self.black[-1], 5)
 
 
-class Player:
+class Game:
     def __init__(self):
         pass
 
@@ -149,31 +149,24 @@ class Player:
 
             return False
 
-        # Five stones in horizontal
-        if check(board[y][i] for i in range(max(0, x - n + 1), min(end, x + n))):
-            return True
+        # Check if five stones in a row horizontally, vertically, and diagnoally
+        check_list = [check(board[y][i] for i in range(max(0, x - n + 1), min(end, x + n))),
+                      check(board[i][x] for i in range(max(0, y - n + 1), min(end, y + n))),
+                      check(board[y + i][x + i] for i in range(max(-x, -y, 1 - n), min(end - x, end - y, n))),
+                      check(board[y - i][x + i] for i in range(max(-x, y - end + 1, 1 - n), min(end - x, y + 1, n)))]
 
-        # Five stones in vertical
-        if check(board[i][x] for i in range(max(0, y - n + 1), min(end, y + n))):
-            return True
+        return any(check_list)
 
-        # Five stones in top-left to bottom-right diagonal
-        if check(board[y + i][x + i] for i in range(max(-x, -y, 1 - n), min(end - x, end - y, n))):
-            return True
-
-        # Five stones in bottom-left to top-right diagonal
-        if check(board[y - i][x + i] for i in range(max(-x, y - end + 1, 1 - n), min(end - x, y + 1, n))):
-            return True
-
-        return False
-
-    def message(self, board, x, y):
+    def message(self, is_win, board, x, y):
         """Display message when winner comes out."""
-        if board[y][x] == 1:
-            print("Congrat! Black stone wins the game!")
-
-        if board[y][x] == 2:
-            print("Congrat! White stone wins the game!")
+        if is_win and (x or y) != 0:
+            if board[y][x] == 1:
+                print("Congrats! Black stone wins this round!")
+            elif board[y][x] == 2:
+                print("Congrats! White stone wins this round!")
+            else:
+                return
+            return False
 
 
 def main():
@@ -185,10 +178,10 @@ def main():
     # Initialise game objects
     board = Board()
     stone = Stone()
-    player = Player()
+    game = Game()
 
-    over = 0
     is_win = False
+    over = 0
     while not over:
         clock.tick(10)
         screen.fill(Colour.BOARD)
@@ -204,13 +197,9 @@ def main():
                 stone.window_pos()
                 stone.grid_pos(board.start)
                 stone.place(board.panel, board.start, board.end, stone.x, stone.y)
-                is_win = player.winner(board.panel, stone.grid_x, stone.grid_y)
+                is_win = game.winner(board.panel, stone.grid_x, stone.grid_y)
 
-            if is_win:
-                player.message(board.panel, stone.grid_x, stone.grid_y)
-                is_win = False
-
-            if is_win and (event.type == KEYDOWN and event.key == K_r):
+            if (event.type == KEYDOWN and event.key == K_r):
                 # Restart the game
                 print("Start over another round!")
                 board.panel = np.zeros((15, 15))
@@ -222,6 +211,7 @@ def main():
         board.draw(screen)
         stone.draw(screen, stone.black, stone.white)
         stone.last_palced(stone.player, screen)
+        is_win = game.message(is_win, board.panel, stone.grid_x, stone.grid_y)
 
         pygame.display.update()
 
